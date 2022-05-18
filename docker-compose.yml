@@ -1,0 +1,48 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:14.2-alpine
+    ports:
+      - '5432:5432'
+    env_file:
+      - docker/postgres.env
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "convious", "-U", "convious" ]
+    networks:
+      default:
+        ipv4_address: 172.27.0.2
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
+    networks:
+      default:
+        ipv4_address: 172.27.0.3
+
+  webserver:
+    build:
+      dockerfile: Dockerfile
+    entrypoint: ./docker/start-webserver.sh
+    ports:
+      - '8080:8080'
+    env_file:
+      - docker/postgres.env
+      - docker/hosts.env
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ./docker/ping-webserver.sh
+    networks:
+      default:
+        ipv4_address: 172.27.0.5
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.27.0.0/24
