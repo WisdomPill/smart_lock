@@ -15,8 +15,8 @@ COPY Pipfile* ./
 
 # install python requirements
 RUN apk add --no-cache --virtual .build-deps \
-    ca-certificates gcc g++ linux-headers postgresql-dev \
-    musl-dev libffi-dev openssl-dev cargo jpeg-dev \
+    ca-certificates postgresql-dev musl-dev  \
+    libffi-dev openssl-dev cargo jpeg-dev \
     freetype-dev zlib-dev build-base \
     && pipenv lock -r > requirements.txt \
     && pipenv lock -r --dev > dev-requirements.txt \
