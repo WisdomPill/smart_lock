@@ -3,11 +3,7 @@ from typing import Protocol
 from django.core.cache import cache
 from redis.exceptions import LockError
 from rest_framework.response import Response
-from rest_framework.status import (
-    HTTP_200_OK,
-    HTTP_404_NOT_FOUND,
-    HTTP_408_REQUEST_TIMEOUT,
-)
+from rest_framework.status import HTTP_200_OK, HTTP_408_REQUEST_TIMEOUT
 from rest_framework.views import APIView
 
 from entry.django_redlock import DjangoRedlock

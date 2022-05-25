@@ -7,24 +7,29 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Entry',
+            name="Entry",
             fields=[
-                ('key', models.CharField(max_length=32, primary_key=True, serialize=False)),
-                ('value', models.IntegerField(default=0)),
+                (
+                    "key",
+                    models.CharField(max_length=32, primary_key=True, serialize=False),
+                ),
+                ("value", models.IntegerField(default=0)),
             ],
         ),
         migrations.CreateModel(
-            name='Lock',
+            name="Lock",
             fields=[
-                ('name', models.CharField(max_length=32, primary_key=True, serialize=False)),
-                ('token', models.CharField(max_length=32)),
-                ('created_at', models.DateTimeField(auto_now=True)),
-                ('timeout', models.FloatField(null=True)),
+                (
+                    "name",
+                    models.CharField(max_length=32, primary_key=True, serialize=False),
+                ),
+                ("token", models.CharField(max_length=32)),
+                ("created_at", models.DateTimeField(auto_now=True)),
+                ("timeout", models.FloatField(null=True)),
             ],
         ),
     ]

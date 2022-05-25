@@ -146,7 +146,9 @@ class DjangoRedlock:
 
         try:
             with atomic():
-                Lock.objects.select_for_update().create(name=self.name, token=token, timeout=timeout)
+                Lock.objects.select_for_update().create(
+                    name=self.name, token=token, timeout=timeout
+                )
                 success = True
         except IntegrityError:
             logger.warning("Lock already exists")
@@ -161,7 +163,8 @@ class DjangoRedlock:
                             and lock.created_at + timedelta(milliseconds=lock.timeout)
                             > datetime.now()
                         ):
-                            # lock expired, save it again to update timeout and created_at
+                            # lock expired,
+                            # save it again to update timeout and created_at
                             lock.timeout = timeout
                             lock.save()
                             success = True
@@ -187,11 +190,13 @@ class DjangoRedlock:
 
             within_timeout = (
                 lock.timeout is not None
-                and lock.created_at + timedelta(milliseconds=lock.timeout) > datetime.now()
+                and lock.created_at + timedelta(milliseconds=lock.timeout)
+                > datetime.now()
             )
             no_timeout = lock.timeout is None
 
-            # token is set, lock token is the same as thread local one and (timeout is not set, or we are within timeout)
+            # token is set,
+            # lock token is the same as thread local one and (timeout is not set, or we are within timeout)  # noqa: E501
             return (
                 self.local.token is not None
                 and lock.token == self.local.token
@@ -216,7 +221,9 @@ class DjangoRedlock:
                 if lock.token == expected_token:
                     lock.delete()
                 else:
-                    raise LockNotOwnedError("Cannot release a lock" " that's no longer owned")
+                    raise LockNotOwnedError(
+                        "Cannot release a lock" " that's no longer owned"
+                    )
             except Lock.DoesNotExist:
                 logger.warning("lock does not exists, it was already released")
 
@@ -255,7 +262,9 @@ class DjangoRedlock:
 
                     success = True
                 else:
-                    raise LockNotOwnedError("Cannot release a lock that's no longer owned")
+                    raise LockNotOwnedError(
+                        "Cannot release a lock that's no longer owned"
+                    )
             except Lock.DoesNotExist:
                 raise LockNotOwnedError("Cannot extend a lock that's no longer owned")
 
