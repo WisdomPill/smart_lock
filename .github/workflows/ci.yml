@@ -117,7 +117,7 @@ jobs:
 
       - name: Run tests
         id: run_tests
-        run: docker run --network host --env-file docker/postgres.env ghcr.io/wisdompill/smart_lock:latest-dev-${{ hashFiles('smart_lock/Pipfile.lock') }} test
+        run: docker run --network host --env-file docker/postgres.env --entrypoint pytest ghcr.io/wisdompill/smart_lock:latest-dev-${{ hashFiles('smart_lock/Pipfile.lock') }}
 
   black:
     runs-on: ubuntu-latest
