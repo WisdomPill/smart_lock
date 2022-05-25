@@ -3,6 +3,44 @@ from random import choice
 from django.utils.lorem_ipsum import COMMON_WORDS
 from locust import HttpUser, between, task
 
+COUNTRIES = [
+    "Albania",
+    "Croatia",
+    "Montenegro",
+    "North Macedonia",
+    "Serbia",
+    "Slovenia",
+    "Australia",
+    "Denmark",
+    "Finland",
+    "Iceland",
+    "Norway",
+    "Sweden",
+    "Armenia",
+    "Azerbaijan",
+    "Georgia",
+    "Israel",
+    "Ukraine",
+    "Bulgaria",
+    "Cyprus",
+    "Greece",
+    "Malta",
+    "Portugal",
+    "San Marino",
+    "Estonia",
+    "Latvia",
+    "Lithuania",
+    "Moldova",
+    "Poland",
+    "Romania",
+    "Austria",
+    "Belgium",
+    "Czech Republic",
+    "Ireland",
+    "Netherlands",
+    "Switzerland",
+]
+
 TIMEOUT = 2
 
 

@@ -246,6 +246,6 @@ $RECYCLE.BIN/
 .aws-sam
 .idea
 
-inference/example-recordings
+results
 
 db.sqlite3

@@ -19,58 +19,6 @@ class DjangoRedlock:
     Redlock implementation using Django's ORM
     """
 
-    # KEYS[1] - lock name
-    # ARGV[1] - token
-    # return 1 if the lock was released, otherwise 0
-    LUA_RELEASE_SCRIPT = """
-        local token = redis.call('get', KEYS[1])
-        if not token or token ~= ARGV[1] then
-            return 0
-        end
-        redis.call('del', KEYS[1])
-        return 1
-    """
-
-    # KEYS[1] - lock name
-    # ARGV[1] - token
-    # ARGV[2] - additional milliseconds
-    # ARGV[3] - "0" if the additional time should be added to the lock's
-    #           existing ttl or "1" if the existing ttl should be replaced
-    # return 1 if the locks time was extended, otherwise 0
-    LUA_EXTEND_SCRIPT = """
-        local token = redis.call('get', KEYS[1])
-        if not token or token ~= ARGV[1] then
-            return 0
-        end
-        local expiration = redis.call('pttl', KEYS[1])
-        if not expiration then
-            expiration = 0
-        end
-        if expiration < 0 then
-            return 0
-        end
-
-        local newttl = ARGV[2]
-        if ARGV[3] == "0" then
-            newttl = ARGV[2] + expiration
-        end
-        redis.call('pexpire', KEYS[1], newttl)
-        return 1
-    """
-
-    # KEYS[1] - lock name
-    # ARGV[1] - token
-    # ARGV[2] - milliseconds
-    # return 1 if the locks time was reacquired, otherwise 0
-    LUA_REACQUIRE_SCRIPT = """
-        local token = redis.call('get', KEYS[1])
-        if not token or token ~= ARGV[1] then
-            return 0
-        end
-        redis.call('pexpire', KEYS[1], ARGV[2])
-        return 1
-    """
-
     def __init__(
         self,
         name,
@@ -204,20 +152,21 @@ class DjangoRedlock:
             logger.warning("Lock already exists")
 
             try:
-                with atomic():
-                    lock = Lock.objects.select_for_update().get(name=self.name)
+                if self.owned():
+                    with atomic():
+                        lock = Lock.objects.select_for_update().get(name=self.name)
 
-                    if (
-                        lock.timeout is not None
-                        and lock.created_at + timedelta(milliseconds=lock.timeout)
-                        > datetime.now()
-                    ):
-                        # lock expired, save it again to update timeout and created_at
-                        lock.timeout = timeout
-                        lock.save()
-                        success = True
-                    else:
-                        logger.warning("Lock is taken by somebody else")
+                        if (
+                            lock.timeout is not None
+                            and lock.created_at + timedelta(milliseconds=lock.timeout)
+                            > datetime.now()
+                        ):
+                            # lock expired, save it again to update timeout and created_at
+                            lock.timeout = timeout
+                            lock.save()
+                            success = True
+                        else:
+                            logger.warning("Lock is taken by somebody else")
             except Lock.DoesNotExist:
                 logger.warning("Lock got deleted before")
 

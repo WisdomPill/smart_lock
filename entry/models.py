@@ -44,4 +44,4 @@ class Lock(models.Model):
 
 class Entry(models.Model):
     key = models.CharField(primary_key=True, max_length=32)
-    value = models.IntegerField(default=1)
+    value = models.IntegerField(default=0)

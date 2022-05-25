@@ -2,6 +2,7 @@ version: '3'
 services:
   postgres:
     image: postgres:14.2-alpine
+    command: postgres -c 'max_connections=1000'
     ports:
       - '5432:5432'
     env_file:
@@ -27,12 +28,13 @@ services:
       dockerfile: Dockerfile
     entrypoint: ./docker/start-webserver.sh
     ports:
-      - '8080:8080'
+      - '8000:8000'
     env_file:
       - docker/postgres.env
       - docker/hosts.env
     depends_on:
       - postgres
+      - redis
     healthcheck:
       test: ./docker/ping-webserver.sh
     networks:

@@ -1,4 +1,4 @@
-FROM python:3.9-alpine
+FROM python:3.10-alpine
 
 # create user `smart_lock` and add it to group `smart_lock`
 RUN addgroup -S smart_lock && adduser -S -G smart_lock smart_lock
@@ -15,9 +15,9 @@ COPY Pipfile* ./
 
 # install python requirements
 RUN apk add --no-cache --virtual .build-deps \
-    ca-certificates gcc linux-headers postgresql-dev \
+    ca-certificates gcc g++ linux-headers postgresql-dev \
     musl-dev libffi-dev openssl-dev cargo jpeg-dev \
-    freetype-dev zlib-dev \
+    freetype-dev zlib-dev build-base \
     && pipenv lock -r > requirements.txt \
     && pipenv lock -r --dev > dev-requirements.txt \
     && pip uninstall --yes pipenv \
@@ -44,7 +44,7 @@ ENV CODE_DIR=$USER_HOME/$SRC
 WORKDIR $CODE_DIR
 
 # copy all the code
-COPY templates $CODE_DIR
+COPY . $CODE_DIR
 
 RUN chown -R smart_lock:smart_lock $CODE_DIR
 

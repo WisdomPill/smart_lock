@@ -1,3 +1,5 @@
+from typing import Protocol
+
 from django.core.cache import cache
 from redis.exceptions import LockError
 from rest_framework.response import Response
@@ -12,7 +14,7 @@ from entry.django_redlock import DjangoRedlock
 from entry.models import Entry
 
 
-class BaseEntryBaseLockView(APIView):
+class BaseViewProtocol(Protocol):
     @staticmethod
     def get_entry_value(key: str) -> int:
         ...
@@ -21,22 +23,19 @@ class BaseEntryBaseLockView(APIView):
     def increment_entry(key: str) -> int:
         ...
 
+
+class BaseView(APIView, BaseViewProtocol):
     def get(self, request, *args, **kwargs):
         key = kwargs["key"]
 
         try:
-            try:
-                value = self.get_entry_value(key)
+            value = self.get_entry_value(key)
 
-                status = HTTP_200_OK
-                data = {"key": key, "value": value}
-            except LockError:
-                status = HTTP_408_REQUEST_TIMEOUT
-                data = {"detail": "request timeout"}
-
-        except Entry.DoesNotExist:
-            status = HTTP_404_NOT_FOUND
-            data = {"detail": "not found"}
+            status = HTTP_200_OK
+            data = {"key": key, "value": value}
+        except LockError:
+            status = HTTP_408_REQUEST_TIMEOUT
+            data = {"detail": "request timeout"}
 
         return Response(data, status=status)
 
@@ -55,11 +54,11 @@ class BaseEntryBaseLockView(APIView):
         return Response(data, status=status)
 
 
-class DjangoEntryDjangoLockView(BaseEntryBaseLockView):
+class DjangoEntryDjangoLockView(BaseView):
     @staticmethod
     def get_entry_value(key: str) -> int:
         with DjangoRedlock(key, timeout=1):
-            entry, created = Entry.objects.get_or_create(key=key, value=0)
+            entry, created = Entry.objects.get_or_create(key=key)
 
         return entry.value
 
@@ -73,11 +72,11 @@ class DjangoEntryDjangoLockView(BaseEntryBaseLockView):
         return entry.value
 
 
-class DjangoEntryRedisLockView(BaseEntryBaseLockView):
+class DjangoEntryRedisLockView(BaseView):
     @staticmethod
     def get_entry_value(key: str) -> int:
         with cache.lock(f"lock-{key}", timeout=1):
-            entry, created = Entry.objects.get_or_create(key=key, value=0)
+            entry, created = Entry.objects.get_or_create(key=key)
 
         return entry.value
 
@@ -91,7 +90,7 @@ class DjangoEntryRedisLockView(BaseEntryBaseLockView):
         return entry.value
 
 
-class RedisEntryDjangoLockView(BaseEntryBaseLockView):
+class RedisEntryDjangoLockView(BaseView):
     @staticmethod
     def get_entry_value(key: str) -> int:
         with DjangoRedlock(key, timeout=1):
@@ -107,7 +106,7 @@ class RedisEntryDjangoLockView(BaseEntryBaseLockView):
         return value
 
 
-class RedisEntryRedisLockView(BaseEntryBaseLockView):
+class RedisEntryRedisLockView(BaseView):
     @staticmethod
     def get_entry_value(key: str) -> int:
         with cache.lock(f"lock-{key}", timeout=1):
