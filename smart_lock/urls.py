@@ -15,6 +15,9 @@ Including another URLconf
 """
 from django.urls import include, path
 
+from smart_lock.views import HealthCheckView
+
 urlpatterns = [
     path("entry/", include("entry.urls")),
+    path("health-check/", HealthCheckView.as_view()),
 ]

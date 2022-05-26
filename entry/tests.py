@@ -2,6 +2,7 @@ import time
 
 import pytest
 from redis.exceptions import LockError, LockNotOwnedError
+from rest_framework.status import HTTP_200_OK
 
 from entry.django_redlock import DjangoRedlock
 from entry.models import Lock
@@ -251,3 +252,77 @@ class TestLock:
 
         with pytest.raises(LockNotOwnedError):
             lock.reacquire()
+
+
+@pytest.mark.django_db
+class TestViews:
+    @pytest.mark.parametrize(
+        "entry, lock",
+        [
+            ("django", "django"),
+            ("django", "redis"),
+            ("redis", "django"),
+            ("redis", "redis"),
+        ],
+    )
+    def test_get_entry_no_entry_exists(self, client, entry: str, lock: str):
+        key = "test"
+        response = client.get(f"/entry/{entry}/{lock}/lock/{key}/")
+
+        assert response.status_code == HTTP_200_OK
+
+        assert response.json() == {"key": "test", "value": 0}
+
+    @pytest.mark.parametrize(
+        "entry, lock",
+        [
+            ("django", "django"),
+            ("django", "redis"),
+            ("redis", "django"),
+            ("redis", "redis"),
+        ],
+    )
+    def test_increment_entry(self, client, entry: str, lock: str):
+        key = "test"
+
+        response = client.post(f"/entry/{entry}/{lock}/lock/{key}/")
+
+        assert response.status_code == HTTP_200_OK
+
+        assert response.json() == {"key": "test", "value": 1}
+
+        response = client.get(f"/entry/{entry}/{lock}/lock/{key}/")
+
+        assert response.status_code == HTTP_200_OK
+
+        assert response.json() == {"key": "test", "value": 1}
+
+    @pytest.mark.parametrize(
+        "entry, lock",
+        [
+            ("django", "django"),
+            ("django", "redis"),
+            ("redis", "django"),
+            ("redis", "redis"),
+        ],
+    )
+    def test_increment_entry_twice(self, client, entry: str, lock: str):
+        key = "test"
+
+        response = client.post(f"/entry/{entry}/{lock}/lock/{key}/")
+
+        assert response.status_code == HTTP_200_OK
+
+        assert response.json() == {"key": "test", "value": 1}
+
+        response = client.post(f"/entry/{entry}/{lock}/lock/{key}/")
+
+        assert response.status_code == HTTP_200_OK
+
+        assert response.json() == {"key": "test", "value": 2}
+
+        response = client.get(f"/entry/{entry}/{lock}/lock/{key}/")
+
+        assert response.status_code == HTTP_200_OK
+
+        assert response.json() == {"key": "test", "value": 2}

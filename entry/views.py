@@ -90,7 +90,7 @@ class RedisEntryDjangoLockView(BaseView):
     @staticmethod
     def get_entry_value(key: str) -> int:
         with DjangoRedlock(key, timeout=1):
-            value = cache.get(key)
+            value = cache.get(key, default=0)
 
         return value
 
@@ -106,7 +106,7 @@ class RedisEntryRedisLockView(BaseView):
     @staticmethod
     def get_entry_value(key: str) -> int:
         with cache.lock(f"lock-{key}", timeout=1):
-            value = cache.get(key)
+            value = cache.get(key, default=0)
 
         return value
 
